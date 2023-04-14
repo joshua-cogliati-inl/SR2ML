@@ -587,7 +587,10 @@ def constructSemanticVectorUsingDisambiguatedSynsets(wordSynsets, jointWordSynse
       for synsetB in wordSynsets:
         similarity = synsetsSimilarity(jointSynset, synsetB, method=simMethod, disambiguation=True)
         simVector.append(similarity)
-      maxSim = max(simVector)
+      if len(simVector) == 0:
+        maxSim = 0.0
+      else:
+        maxSim = max(simVector)
       # if similarity < 0.2, treat it as noise and reset it to 0.0
       if maxSim >= 0.2:
         vector[i] = maxSim
