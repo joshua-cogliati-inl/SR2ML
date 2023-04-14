@@ -1,4 +1,4 @@
-import csv,os,sys
+import csv,os,sys,math
 import simUtils
 
 data = []
@@ -36,3 +36,11 @@ def getSimWithDis(s, data):
 #sd2 = getSim(data[-1][0], data[:100])
 #swdo = getSimWithDis(data[0][0], data[:100])
 #swdo.sort()
+
+def denan(l):
+  def denanSub(x):
+    if math.isnan(x):
+      return -1
+    else:
+      return x
+  return [(denanSub(x[0]),)+x[1:] for x in l]
