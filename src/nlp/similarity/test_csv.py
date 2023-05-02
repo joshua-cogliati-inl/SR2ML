@@ -1,4 +1,4 @@
-import csv,os,sys,math
+import csv,os,sys,math,re
 import simUtils
 
 data = []
@@ -24,6 +24,26 @@ def getSim2(s, data):
     simData.append((sim,)+d)
   return simData
 
+_words = re.compile("[a-z]+")
+def getWords(s):
+  return " ".join(_words.findall(s.lower()))
+# new_data = [(getWords(x[0]),) + x for x in data]
+
+def getWords2(s):
+  l = re.split("([-A-Za-z0-9]+)", s)
+  return "".join([x for x in l if not re.search("[-0-9]+",x)])
+# new_data = [(getWords2(x[0]),) + x for x in data]
+
+
+def getSimOnlyWords(s, data):
+  simData = []
+  sw = getWords(s)
+  for d in data:
+    sim = simUtils.sentenceSimilarity(sw, getWords(d[0]), infoContentNorm=False, delta=0.85)
+    simData.append((sim,)+d)
+  return simData
+
+
 def getSimWithDis(s, data):
   simData = []
   for d in data:
@@ -44,3 +64,5 @@ def denan(l):
     else:
       return x
   return [(denanSub(x[0]),)+x[1:] for x in l]
+
+orig_data = data; data = [(getWords2(x[0]),) + x for x in orig_data]
