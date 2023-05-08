@@ -22,7 +22,20 @@ for i in range(1,len(df_TASKRSRC['task_id'])+1):
   task_id_to_role_id[df_TASKRSRC['task_id'][i]] = df_TASKRSRC['role_id'][i]
 for i in range(1,len(df_TASK['task_name'])+1):
   data.append((df_TASK['task_name'][i], df_TASK['target_drtn_hr_cnt'][i],  df_TASK['total_drtn_hr_cnt'][i], task_id_to_role_id.get(df_TASK['task_code'][i], None)))
+df_TASK_selected = df_TASK[['task_code','task_name','target_drtn_hr_cnt','total_drtn_hr_cnt']]
 
+def getOnlyWords(s):
+  """
+   returns a string with only the words (removes things like T8, A-b, etc)
+  """
+  l = re.split("([-A-Za-z0-9]+)", s)
+  return "".join([x for x in l if not re.search("[-0-9]+",x)])
+
+
+
+df_TASK_selected = pd.concat([df_TASK_selected,df_TASK_selected.rename(columns={'task_name':'short_name'})['short_name'].apply(getOnlyWords)],axis=1)
+df_TASKSRC_selected = df_TASKRSRC[['task_id','role_id']].rename(columns={'task_id':'task_code'})
+df_TASK_labeled = pd.merge(df_TASK_selected, df_TASKSRC_selected, how="left", on="task_code")
 
 
 def getSim(s, data):
@@ -49,6 +62,12 @@ def getWords2(s):
   return "".join([x for x in l if not re.search("[-0-9]+",x)])
 # new_data = [(getWords2(x[0]),) + x for x in data]
 
+def getOnlyWords(s):
+  """
+   returns a string with only the words (removes things like T8, A-b, etc)
+  """
+  l = re.split("([-A-Za-z0-9]+)", s)
+  return "".join([x for x in l if not re.search("[-0-9]+",x)])
 
 def getSimOnlyWords(s, data):
   simData = []
