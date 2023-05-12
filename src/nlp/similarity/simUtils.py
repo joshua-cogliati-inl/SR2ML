@@ -455,7 +455,10 @@ def identifyBestSynset(word, jointWordList, jointSynsetList):
   bestSyn = wordSyns[0]
   for syn in wordSyns:
     similarity = [wn.path_similarity(syn, syn1) for syn1 in synsets]
-    temp = np.max(similarity)
+    if len(similarity) == 0:
+      temp = -2
+    else:
+      temp = np.max(similarity)
     if temp > max:
       bestSyn = syn
       max = temp
