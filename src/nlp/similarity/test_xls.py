@@ -1,6 +1,7 @@
 import csv,os,sys,math,re
 import simUtils
 import pandas as pd
+import synsetUtils as SU
 
 data = []
 #with open(sys.argv[1], newline="") as csvfile:
@@ -99,4 +100,33 @@ def denan(l):
       return x
   return [(denanSub(x[0]),)+x[1:] for x in l]
 
-orig_data = data; data = [(getWords2(x[0]),) + x for x in orig_data]
+#orig_data = data; data = [(getWords2(x[0]),) + x for x in orig_data]
+
+
+# sents = df_TASK_labeled[:2].task_name
+# sentSynsets = simUtils.convertSentsToSynsets(sents)
+# similarity = SU.synsetListSimilarity(sentSynsets[0], sentSynsets[1], delta=.8)
+# fullSynsets = simUtils.convertSentsToSynsets(df_TASK_labeled.task_name)
+# partSynsets = simUtils.convertSentsToSynsets(df_TASK_labeled[:100].task_name)
+
+# simData = []
+# for i in range(len(partSynsets)):
+#   sim = SU.synsetListSimilarity(partSynsets[i], partSynsets[0])
+#   simData.append((sim,)+tuple(df_TASK_labeled[i:i+1].values.tolist()[0]))
+# simData = denan(simData)
+# simData.sort(key=lambda x:x[0])
+
+def getMatrix(synsets):
+  simMatrix = {}
+  for i in range(len(synsets)):
+    for j in range(0,i):
+      simMatrix[(i,j)] = SU.synsetListSimilarity(synsets[i],synsets[j])
+  return simMatrix
+
+#   0 1 2 3
+# 0
+# 1 x
+# 2 x x
+# 3 x x x
+
+# m = getMatrix(partSynsets)
