@@ -2,6 +2,7 @@ import csv,os,sys,math,re
 import simUtils
 import pandas as pd
 import synsetUtils as SU
+import time
 
 data = []
 #with open(sys.argv[1], newline="") as csvfile:
@@ -130,3 +131,47 @@ def getMatrix(synsets):
 # 3 x x x
 
 # m = getMatrix(partSynsets)
+
+
+
+
+"""
+import sys
+sys.path.append("..")
+import Preprocessing
+
+abbrList = pd.read_excel('../data/abbreviations.xlsx')
+
+preprocessorList = ['hyphenated_words',
+                    'whitespace',
+                    'numerize']
+
+preprocess = Preprocessing.Preprocessing(preprocessorList, {})
+
+text = 'Perf ann sens calib of cyl'
+text = preprocess(text)
+
+checker = Preprocessing.SpellChecker(text.lower(), checker='mixed')
+
+cleanedText = checker.handleAbbreviations(abbrList, type='mixed')
+"""
+
+import sys
+sys.path.append("..")
+import Preprocessing
+
+abbrList = pd.read_excel('../data/abbreviations.xlsx')
+
+preprocessorList = ['hyphenated_words',
+                    'whitespace',
+                    'numerize']
+
+preprocess = Preprocessing.Preprocessing(preprocessorList, {})
+
+def abbrProcess(text):
+  text = preprocess(text)
+  checker = Preprocessing.SpellChecker(text.lower(), checker='mixed')
+  cleanedText = checker.handleAbbreviations(abbrList, type='mixed')
+  return cleanedText
+
+# for n in df_TASK_labeled.short_name[:20]: print(n,abbrProcess(n))
