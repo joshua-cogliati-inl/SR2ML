@@ -329,6 +329,89 @@ class SpellChecker(object):
       bestOpt = self.findOptimalOption(options)
       return bestOpt
 
+  def generateAbbrDict(self, abbrDatabase):
+    """
+      Generates a AbbrDict that can be used by handleAbbreviationsDict
+      @ In, abbrDatabase, pandas dataframe, dataframe containing library of abbreviations
+                                            and their correspoding full expression
+      @ Out, abbrDict, dictionary, a abbreviations dictionary
+    """
+    abbrDict = {}
+    #There may be a more efficient way to do the following
+    for row in abbrDatabase.itertuples():
+      abbrs = abbrDict.get(row.Abbreviation,[])
+      abbrs.append(row.Full)
+      abbrDict[row.Abbreviation] = abbrs
+    return abbrDict
+
+  def handleAbbreviationsDict(self, abbrDict, text, type):
+    """
+      Performs automatic correction of abbreviations and returns corrected text
+      This method relies on a database of abbreviations located at:
+      src/nlp/data/abbreviations.xlsx
+      This database contains the most common abbreviations collected from literarture and
+      it provides for each abbreviation its corresponding full word(s); an abbreviation might
+      have multple words associated. In such case the full word that makes more sense given the
+      context is chosen (see findOptimalOption method)
+      @ In, abbrDict, dictionary, dictionary containing library of abbreviations
+                                            and their correspoding full expression
+      @ In, text, str, string of text that will be analyzed
+      @ In, type, string, type of abbreviation method ('spellcheck','hard','mixed') that are employed
+                          to determine which words are abbreviations that nned to be expanded
+                          * spellcheck: in this case spellchecker is used to identify words that
+                                        are not recognized
+                          * hard: here we directly search for the abbreviations in the provided
+                                  sentence
+                          * mixed: here we perform first a "hard" search followed by a "spellcheck"
+                                   search
+      @ Out, options, list, list of corrected text options
+    """
+    if type == 'spellcheck':
+      unknowns = self.getMisspelledWords(text)
+    elif type == 'hard' or type=='mixed':
+      unknowns = []
+      splitSent = text.split()
+      for word in splitSent:
+        if word.lower() in abbrDict:
+          unknowns.append(word)
+      if type=='mixed':
+        set1 = set(self.getMisspelledWords(text))
+        set2 = set(unknowns)
+        unknowns = list(set1.union(set2))
+
+    corrections={}
+    for word in unknowns:
+      if word.lower() in abbrDict:
+        if len(abbrDict[word.lower()]) > 0:
+          corrections[word] = abbrDict[word.lower()]
+      else:
+        # Here we are addressing the fact that the abbreviation database will never be complete
+        # Given an abbreviation that is not part of the abbreviation database, we are looking for a
+        # a subset of abbreviations the abbreviation database that are close enough (and consider
+        # them as possible candidates
+        from difflib import SequenceMatcher
+        corrections[word] = []
+        abbreviationDS = list(abbrDict)
+        for index,abbr in enumerate(abbreviationDS):
+          if SequenceMatcher(None, word, abbr).ratio()>0.8:
+            corrections[word] = abbrDict[abbr]
+      if not corrections[word]:
+        corrections.pop(word)
+
+    combinations = list(itertools.product(*list(corrections.values())))
+    options = []
+    for comb in combinations:
+      corrected = text
+      for index,key in enumerate(corrections.keys()):
+        corrected = re.sub(r"\b%s\b" % str(key) , comb[index], corrected)
+      options.append(corrected)
+
+    if not options:
+      return text
+    else:
+      bestOpt = self.findOptimalOption(options)
+      return bestOpt
+
   def findOptimalOption(self,options):
     """
       Method to handle abbreviation with multiple meanings
@@ -365,6 +448,8 @@ class AbbrExpander(object):
                              'numerize']
     self.preprocess = Preprocessing(self.preprocessorList, {})
     self.checker = SpellChecker(checker='mixed')
+    self.abbrDict = self.checker.generateAbbrDict(self.abbrList)
+
 
   def abbrProcess(self, text):
     """
@@ -373,5 +458,5 @@ class AbbrExpander(object):
       @ Out, expandedText, string, the text with abbreviations expanded
     """
     text = self.preprocess(text)
-    expandedText = self.checker.handleAbbreviations(self.abbrList, text.lower(), type='mixed')
+    expandedText = self.checker.handleAbbreviationsDict(self.abbrDict, text.lower(), type='mixed')
     return expandedText
