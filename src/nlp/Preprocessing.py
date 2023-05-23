@@ -18,6 +18,7 @@ from similarity.simUtils import wordsSimilarity
 from nltk.corpus import wordnet as wn
 import os
 import numpy as np
+import pandas as pd
 
 # list of available preprocessors in textacy.preprocessing.normalize
 textacyNormalize = ['bullet_points',
@@ -185,15 +186,12 @@ class SpellChecker(object):
     Object to find misspelled words and automatically correct spelling
   """
 
-  def __init__(self, text, checker='autocorrect'):
+  def __init__(self, checker='autocorrect'):
     """
       SpellChecker object constructor
-      @ In, text, str, string of text that will be analyzed
       @ In, checker, str, optional, spelling corrector to use ('autocorrect' or 'ContextualSpellCheck')
       @ Out, None
     """
-    # store text
-    self.text = text
     self.checker = checker.lower()
     # get included and additional dictionary words and update speller dictionary
     if self.checker == 'autocorrect':
@@ -226,42 +224,42 @@ class SpellChecker(object):
     else:
       self.speller.vocab = Vocab(strings=self.includedWords+self.addedWords+words)
 
-  def getMisspelledWords(self):
+  def getMisspelledWords(self, text):
     """
       Returns a list of words that are misspelled according to the dictionary used
       @ In, None
       @ Out, misspelled, list, list of misspelled words
     """
     if self.checker == 'autocorrect':
-      corrected = self.speller(self.text)
-      original = re.findall(r'[^\s!,.?":;-]+', self.text)
+      corrected = self.speller(text)
+      original = re.findall(r'[^\s!,.?":;-]+', text)
       auto = re.findall(r'[^\s!,.?":;-]+', corrected)
       misspelled = list({w1 if w1 != w2 else None for w1, w2 in zip(original, auto)})
       if None in misspelled:
         misspelled.remove(None)
     else:
-      doc = self.nlp(self.text)
+      doc = self.nlp(text)
       doc = self.speller(doc)
       misspelled = list({str(x) for x in doc._.suggestions_spellCheck.keys()})
 
     return misspelled
 
-  def correct(self):
+  def correct(self, text):
     """
       Performs automatic spelling correction and returns corrected text
       @ In, None
       @ Out, corrected, str, spelling corrected text
     """
     if self.checker == 'autocorrect':
-      corrected = self.speller(self.text)
+      corrected = self.speller(text)
     else:
-      doc = self.nlp(self.text)
+      doc = self.nlp(text)
       doc = self.speller(doc)
       corrected = doc._.outcome_spellCheck
 
     return corrected
 
-  def handleAbbreviations(self, abbrDatabase, type):
+  def handleAbbreviations(self, abbrDatabase, text, type):
     """
       Performs automatic correction of abbreviations and returns corrected text
       This method relies on a database of abbreviations located at:
@@ -272,6 +270,7 @@ class SpellChecker(object):
       context is chosen (see findOptimalOption method)
       @ In, abbrDatabase, pandas dataframe, dataframe containing library of abbreviations
                                             and their correspoding full expression
+      @ In, text, str, string of text that will be analyzed
       @ In, type, string, type of abbreviation method ('spellcheck','hard','mixed') that are employed
                           to determine which words are abbreviations that nned to be expanded
                           * spellcheck: in this case spellchecker is used to identify words that
@@ -284,15 +283,15 @@ class SpellChecker(object):
     """
     abbreviationSet = set(abbrDatabase['Abbreviation'].values)
     if type == 'spellcheck':
-      unknowns = self.getMisspelledWords()
+      unknowns = self.getMisspelledWords(text)
     elif type == 'hard' or type=='mixed':
       unknowns = []
-      splitSent = self.text.split()
+      splitSent = text.split()
       for word in splitSent:
         if word.lower() in abbreviationSet:
           unknowns.append(word)
       if type=='mixed':
-        set1 = set(self.getMisspelledWords())
+        set1 = set(self.getMisspelledWords(text))
         set2 = set(unknowns)
         unknowns = list(set1.union(set2))
 
@@ -319,13 +318,13 @@ class SpellChecker(object):
     combinations = list(itertools.product(*list(corrections.values())))
     options = []
     for comb in combinations:
-      corrected = self.text
+      corrected = text
       for index,key in enumerate(corrections.keys()):
         corrected = re.sub(r"\b%s\b" % str(key) , comb[index], corrected)
       options.append(corrected)
 
     if not options:
-      return self.text
+      return text
     else:
       bestOpt = self.findOptimalOption(options)
       return bestOpt
@@ -349,3 +348,30 @@ class SpellChecker(object):
     return optimalOpt
 
 
+class AbbrExpander(object):
+  """
+    Class to expand abbreviations
+  """
+
+  def __init__(self, abbreviationsFilename):
+    """
+      Abbrviation expander constructor
+      @ In, abbreviationsFilename, string, filename of abbreviations data
+      @ Out, None
+    """
+    self.abbrList = pd.read_excel(abbreviationsFilename)
+    self.preprocessorList = ['hyphenated_words',
+                             'whitespace',
+                             'numerize']
+    self.preprocess = Preprocessing(self.preprocessorList, {})
+    self.checker = SpellChecker(checker='mixed')
+
+  def abbrProcess(self, text):
+    """
+      Expands the abbreviations in text
+      @ In, text, string, the text to expand
+      @ Out, expandedText, string, the text with abbreviations expanded
+    """
+    text = self.preprocess(text)
+    expandedText = self.checker.handleAbbreviations(self.abbrList, text.lower(), type='mixed')
+    return expandedText
