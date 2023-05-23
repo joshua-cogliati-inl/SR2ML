@@ -197,12 +197,18 @@ role_id_set = set(df_TASK_labeled.role_id)
 # subset_mat = getMatrix(abbrSubsetSynsets)
 
 def getSubsetMatrix(df_TASK_labeled, role_id):
-  df_TASK_subset = df_TASK_labeled[df_TASK_labeled["role_id"] == 'WEST']
+  df_TASK_subset = df_TASK_labeled[df_TASK_labeled["role_id"] == role_id]
   abbr_expand = df_TASK_subset['short_name'].apply(abbrProcess)
   abbr_expand.name = 'abbr_expand'
   df_TASK_abbr_subset = pd.concat([df_TASK_subset, abbr_expand],axis=1)
   abbrSubsetSynsets = simUtils.convertSentsToSynsets(df_TASK_abbr_subset.abbr_expand)
   subset_mat = getMatrix(abbrSubsetSynsets)
   return (df_TASK_abbr_subset, subset_mat)
+
+def getPlainSubsetMatrix(df_TASK_labeled, role_id):
+  df_TASK_subset = df_TASK_labeled[df_TASK_labeled["role_id"] == role_id]
+  subsetSynsets = simUtils.convertSentsToSynsets(df_TASK_subset.short_name)
+  subset_mat = getMatrix(subsetSynsets)
+  return (df_TASK_subset, subset_mat)
 
 # stuff = getSubsetMatrix(df_TASK_labeled,'SEEI')
