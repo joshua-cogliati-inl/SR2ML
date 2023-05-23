@@ -157,11 +157,17 @@ text = preprocess(text)
 checker = Preprocessing.SpellChecker(text.lower(), checker='mixed')
 
 cleanedText = checker.handleAbbreviations(abbrList, type='mixed')
+
+
+checker = Preprocessing.SpellChecker(checker='mixed')
+
+cleanedText = checker.handleAbbreviations(abbrList, text.lower(), type='mixed')
 """
 
 import sys
 sys.path.append("..")
 import Preprocessing
+"""
 
 abbrList = pd.read_excel('../data/abbreviations.xlsx')
 
@@ -185,6 +191,11 @@ def abbrProcess(text):
 # abbrNamesUniq = list(set(abbrNames))
 # abbrSynsets = simUtils.convertSentsToSynsets(abbrNamesUniq)
 # mat = getMatrix(abbrSynsets)
+"""
+
+abbrExpander = Preprocessing.AbbrExpander('../data/abbreviations.xlsx')
+
+abbrProcess = abbrExpander.abbrProcess
 
 role_id_set = set(df_TASK_labeled.role_id)
 
@@ -212,3 +223,4 @@ def getPlainSubsetMatrix(df_TASK_labeled, role_id):
   return (df_TASK_subset, subset_mat)
 
 # stuff = getSubsetMatrix(df_TASK_labeled,'SEEI')
+
