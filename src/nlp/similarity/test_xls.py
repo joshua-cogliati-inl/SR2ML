@@ -245,3 +245,19 @@ def deJsonMatrix(jsonMatrix):
 # json.dump(makeMatrixJsonable(chem_stuff[1]), open("/tmp/chem.json", "w"))
 
 # jmatrix = json.load(open("/tmp/chem.json", "r"))
+
+
+def calculateAndDump(prefix, role_id):
+  results = getSubsetMatrix(df_TASK_labeled, role_id)
+  results[0].to_csv(prefix+role_id+".csv")
+  json.dump(makeMatrixJsonable(results[1]), open(prefix+role_id+".json", "w"))
+
+"""
+for role in ['FPMT', 'ELEC', 'MECH', 'DEIC', 'DOOR', 'FIN', 'WRF', 'SP08', 'CYBR', 'PJM', 'PRAD', 'PMGR', 'EWM', 'CARP', 'SRVY', 'COMM', 'PMGA', 'MCIT', 'SBOP', 'SAFE', 'FACM', 'SMT', 'RMT', 'EFNC', 'Underground Piping', 'SEPS', 'EFNB', 'EPLN', 'THER', 'RMC', 'PJW', 'CAPT', 'OCSB', 'SEEI', 'SRP', 'FINM', 'FWST', 'FINE', 'PMS', 'NFRX', 'RPLS', 'RMS', 'LUBE', 'WSTH', 'PJE', 'OCSA', 'EFNA', 'I&C', 'WEST', 'DECV', 'FINI', 'CPRO', 'STND', 'MRUL', 'RPPJ', 'MRGE', 'VIBE', 'OCS', 'PJCB', 'EFF', 'MGTK', 'CMEC', 'LLRT', 'OPRA', 'CEIC', 'PJUP', 'PMOD', 'SFIN', 'PR&C', 'MMOD', 'UTLY', 'FUEL', 'PJCS', 'SCTY', 'CTLE', 'RPHS', 'PCM', 'MACH', 'CHEM', 'RPD', 'HVAC', 'EPRO', 'FIRE', 'SESS', 'COAT', 'TURB', 'CRAN', 'MRGM', 'CRNE', 'SCHD', 'INST', 'MOCH', 'WELD', 'VALV', 'PJCC', 'ISI', 'PJCI', 'OPS', 'RP']:
+  start = time.time()
+  print(role)
+  calculateAndDump('/home/jjc/riam_dump/', role)
+  print(time.time() - start)
+
+
+"""
