@@ -224,3 +224,24 @@ def getPlainSubsetMatrix(df_TASK_labeled, role_id):
 
 # stuff = getSubsetMatrix(df_TASK_labeled,'SEEI')
 
+# chem_stuff = getSubsetMatrix(df_TASK_labeled,'CHEM')
+
+# chem_stuff[0].to_csv("/tmp/chem.csv")
+
+def makeMatrixJsonable(origMatrix):
+  matrix = {}
+  for key in origMatrix:
+    jkey = json.dumps(key)
+    matrix[jkey] = origMatrix[key]
+  return matrix
+
+def deJsonMatrix(jsonMatrix):
+  matrix = {}
+  for jkey in jsonMatrix:
+    key = tuple(json.loads(jkey))
+    matrix[key] = jsonMatrix[jkey]
+  return matrix
+
+# json.dump(makeMatrixJsonable(chem_stuff[1]), open("/tmp/chem.json", "w"))
+
+# jmatrix = json.load(open("/tmp/chem.json", "r"))
