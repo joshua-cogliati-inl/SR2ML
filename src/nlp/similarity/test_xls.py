@@ -1,5 +1,7 @@
 import csv,os,sys,math,re
-import simUtils
+import sys
+sys.path.append("..")
+from similarity import simUtils
 import pandas as pd
 import synsetUtils as SU
 import time
@@ -29,8 +31,10 @@ df_TASK_selected = df_TASK[['task_code','task_name','target_drtn_hr_cnt','total_
 def getOnlyWords(s):
   """
    returns a string with only the words (removes things like T8, A-b, etc)
+   Also removes ()
   """
-  l = re.split("([-A-Za-z0-9]+)", s)
+  s2 = s.translate({ord("("):" ",ord(")"):" "})
+  l = re.split("([-A-Za-z0-9]+)", s2)
   return "".join([x for x in l if not re.search("[-0-9]+",x)])
 
 
@@ -164,8 +168,6 @@ checker = Preprocessing.SpellChecker(checker='mixed')
 cleanedText = checker.handleAbbreviations(abbrList, text.lower(), type='mixed')
 """
 
-import sys
-sys.path.append("..")
 import Preprocessing
 """
 
@@ -206,6 +208,12 @@ role_id_set = set(df_TASK_labeled.role_id)
 # df_TASK_abbr_subset = pd.concat([df_TASK_subset, abbr_expand.rename({'short_name':'abbr_expand'})],axis=1)
 # abbrSubsetSynsets = simUtils.convertSentsToSynsets(df_TASK_abbr_subset.abbr_expand)
 # subset_mat = getMatrix(abbrSubsetSynsets)
+
+def getAbbrDataFrame(df_TASK_subset):
+  abbr_expand = df_TASK_subset['short_name'].apply(abbrProcess)
+  abbr_expand.name = 'abbr_expand'
+  df_TASK_abbr_subset = pd.concat([df_TASK_subset, abbr_expand],axis=1)
+  return df_TASK_abbr_subset
 
 def getSubsetMatrix(df_TASK_labeled, role_id):
   df_TASK_subset = df_TASK_labeled[df_TASK_labeled["role_id"] == role_id]
