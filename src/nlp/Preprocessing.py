@@ -406,7 +406,10 @@ class SpellChecker(object):
     for comb in combinations:
       corrected = text
       for index,key in enumerate(corrections.keys()):
-        corrected = re.sub(r"\b%s\b" % str(key) , comb[index], corrected)
+        try:
+          corrected = re.sub(r"\b%s\b" % str(key) , comb[index], corrected)
+        except re.error as e:
+          print(f"Failed on {key} for {e}")
       options.append(corrected)
 
     if not options:
